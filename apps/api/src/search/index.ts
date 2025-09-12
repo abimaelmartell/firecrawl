@@ -1,10 +1,11 @@
-import { SearchResult } from "../../src/lib/entities";
+import type { SearchResult } from "../../src/lib/entities";
 import { googleSearch } from "./googlesearch";
+import { duckduckgo_search } from "./duckduckgo";
 import { searchapi_search } from "./searchapi";
 import { serper_search } from "./serper";
 import { searxng_search } from "./searxng";
 import { fire_engine_search } from "./fireEngine";
-import { Logger } from "winston";
+import type { Logger } from "winston";
 
 export async function search({
   query,
@@ -34,6 +35,12 @@ export async function search({
   timeout?: number;
 }): Promise<SearchResult[]> {
   try {
+    if (process.env.DDG_ENABLED === "true") {
+      logger.info("Using duckduckgo search");
+      const results = await duckduckgo_search(query, { num_results }, logger);
+      if (results.length > 0) return results;
+    }
+
     if (process.env.FIRE_ENGINE_BETA_URL) {
       logger.info("Using fire engine search");
       const results = await fire_engine_search(query, {

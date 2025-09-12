@@ -1,11 +1,11 @@
-import { logger } from "../../lib/logger";
-import { SearchV2Response, SearchResultType } from "../../lib/entities";
+import type { SearchV2Response, SearchResultType } from "../../lib/entities";
 import { fire_engine_search_v2 } from "./fireEngine-v2";
 import { serper_search } from "./serper";
 import { searchapi_search } from "./searchapi";
 import { searxng_search } from "./searxng";
 import { googleSearch } from "./googlesearch";
-import { Logger } from "winston";
+import { duckduckgo_search_v2 } from "./duckduckgo";
+import type { Logger } from "winston";
 
 export async function search({
   query,
@@ -37,6 +37,20 @@ export async function search({
   type?: SearchResultType | SearchResultType[];
 }): Promise<SearchV2Response> {
   try {
+    if (true) {
+      logger.info("Using duckduckgo search");
+      const results = await duckduckgo_search_v2(
+        query,
+        {
+          numResults: num_results,
+          lang,
+          country,
+        },
+        logger,
+      );
+      if (results.web && results.web.length > 0) return results;
+    }
+
     if (process.env.FIRE_ENGINE_BETA_URL) {
       logger.info("Using fire engine search");
       const results = await fire_engine_search_v2(query, {
