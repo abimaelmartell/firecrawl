@@ -3,6 +3,18 @@ import { JSDOM } from "jsdom";
 import type { Logger } from "winston";
 import { SearchResult } from "../lib/entities";
 
+const getRandomInt = (min: number, max: number): number =>
+  Math.floor(Math.random() * (max - min + 1)) + min;
+
+// based on the code from googlesearch.ts
+function getUserAgent(): string {
+  const lynx_version = `Lynx/${getRandomInt(2, 3)}.${getRandomInt(8, 9)}.${getRandomInt(0, 2)}`;
+  const libwww_version = `libwww-FM/${getRandomInt(2, 3)}.${getRandomInt(13, 15)}`;
+  const ssl_mm_version = `SSL-MM/${getRandomInt(1, 2)}.${getRandomInt(3, 5)}`;
+  const openssl_version = `OpenSSL/${getRandomInt(1, 3)}.${getRandomInt(0, 4)}.${getRandomInt(0, 9)}`;
+  return `${lynx_version} ${libwww_version} ${ssl_mm_version} ${openssl_version}`;
+}
+
 function extractRealUrlFromDuckHref(href: string): string | null {
   try {
     const abs = href.startsWith("http") ? href : `https:${href}`;
@@ -70,7 +82,7 @@ export async function duckduckgo_search(
       params: { q: query },
       timeout: 8000,
       responseType: "text",
-      headers: { Accept: "text/html" },
+      headers: { Accept: "text/html", "User-Agent": getUserAgent() },
     });
     return parseDuckHtmlToResults(
       resp.data,

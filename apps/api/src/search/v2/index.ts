@@ -41,13 +41,10 @@ export async function search({
       logger.info("Using duckduckgo search");
       const results = await duckduckgo_search_v2(
         query,
-        {
-          numResults: num_results,
-          lang,
-          country,
-        },
+        { num_results: num_results },
         logger,
       );
+
       if (results.web && results.web.length > 0) return results;
     }
 

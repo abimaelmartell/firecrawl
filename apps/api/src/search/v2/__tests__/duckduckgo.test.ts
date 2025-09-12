@@ -1,5 +1,5 @@
 import axios from "axios";
-import { duckduckgo_search_v2 } from "../duckduckgo";
+import { duckduckgo_search_v2 } from "../v2/duckduckgo";
 
 jest.mock("axios");
 const mockedGet = axios.get as jest.Mock;
