@@ -37,7 +37,11 @@ export async function search({
   try {
     if (process.env.DUCKDUCKGO_ENABLED === "true") {
       logger.info("Using duckduckgo search");
-      const results = await duckduckgo_search(query, { num_results }, logger);
+      const results = await duckduckgo_search(
+        query,
+        { num_results, lang, country },
+        logger,
+      );
       if (results.length > 0) return results;
     }
 

@@ -3,6 +3,15 @@ import { JSDOM } from "jsdom";
 import type { Logger } from "winston";
 import { SearchResult } from "../lib/entities";
 
+function buildRegionLangParam(
+  lang?: string,
+  country?: string,
+): string | undefined {
+  const l = (lang || "en").toLowerCase();
+  const c = (country || "us").toLowerCase();
+  return `${c}-${l}`;
+}
+
 const getRandomInt = (min: number, max: number): number =>
   Math.floor(Math.random() * (max - min + 1)) + min;
 
@@ -74,12 +83,16 @@ function parseDuckHtmlToResults(
 
 export async function duckduckgo_search(
   query: string,
-  opts: { num_results: number },
+  opts: { num_results: number; lang?: string; country?: string },
   logger?: Logger,
 ): Promise<SearchResult[]> {
   try {
+    const params: Record<string, string> = { q: query };
+    const kl = buildRegionLangParam(opts.lang, opts.country);
+    if (kl) params.kl = kl;
+
     const resp = await axios.get<string>("https://html.duckduckgo.com/html/", {
-      params: { q: query },
+      params,
       timeout: 8000,
       responseType: "text",
       headers: { Accept: "text/html", "User-Agent": getUserAgent() },

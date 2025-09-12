@@ -40,8 +40,8 @@ describe("duckduckgo_search_v2", () => {
       data: `<body>Unfortunately, bots use DuckDuckGo too. Please complete the following challenge</body>`,
     });
 
-    const res = await duckduckgo_search_v2("test", { num_results: 3 });
-    expect(res.web ?? []).toHaveLength(0);
+    const res = await duckduckgo_search("test", { num_results: 3 });
+    expect(res).toHaveLength(0);
   });
 });
 
