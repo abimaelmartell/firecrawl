@@ -37,7 +37,7 @@ export async function search({
   type?: SearchResultType | SearchResultType[];
 }): Promise<SearchV2Response> {
   try {
-    if (true) {
+    if (process.env.DUCKDUCKGO_ENABLED === "true") {
       logger.info("Using duckduckgo search");
       const results = await duckduckgo_search_v2(
         query,

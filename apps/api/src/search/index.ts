@@ -35,7 +35,7 @@ export async function search({
   timeout?: number;
 }): Promise<SearchResult[]> {
   try {
-    if (process.env.DDG_ENABLED === "true") {
+    if (process.env.DUCKDUCKGO_ENABLED === "true") {
       logger.info("Using duckduckgo search");
       const results = await duckduckgo_search(query, { num_results }, logger);
       if (results.length > 0) return results;
