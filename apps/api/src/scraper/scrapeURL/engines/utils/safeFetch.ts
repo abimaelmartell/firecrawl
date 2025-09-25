@@ -18,7 +18,10 @@ export function isIPPrivate(address: string): boolean {
   return addr.range() !== "unicast";
 }
 
-function makeSecureDispatcher(skipTlsVerification: boolean) {
+function makeSecureDispatcher(
+  config: { skipTlsVerification?: boolean; allowPrivateIPs?: boolean } = {},
+) {
+  const { skipTlsVerification = false, allowPrivateIPs = false } = config;
   const agentOpts: undici.Agent.Options = {
     maxRedirections: 5000,
   };
@@ -47,23 +50,47 @@ function makeSecureDispatcher(skipTlsVerification: boolean) {
 
   const agent = baseAgent.compose(cookie({ jar: cookieJar }));
 
-  agent.on("connect", (_, targets) => {
-    const client: undici.Client = targets.slice(-1)[0] as undici.Client;
-    const socketSymbol = Object.getOwnPropertySymbols(client).find(
-      x => x.description === "socket",
-    )!;
-    const socket: Socket | TLSSocket = (client as any)[socketSymbol];
+  if (!allowPrivateIPs) {
+    agent.on("connect", (_, targets) => {
+      const client: undici.Client = targets.slice(-1)[0] as undici.Client;
+      const socketSymbol = Object.getOwnPropertySymbols(client).find(
+        x => x.description === "socket",
+      )!;
+      const socket: Socket | TLSSocket = (client as any)[socketSymbol];
 
-    if (socket.remoteAddress && isIPPrivate(socket.remoteAddress)) {
-      socket.destroy(new InsecureConnectionError());
-    }
-  });
+      if (socket.remoteAddress && isIPPrivate(socket.remoteAddress)) {
+        socket.destroy(new InsecureConnectionError());
+      }
+    });
+  }
 
   return agent;
 }
 
-const secureDispatcher = makeSecureDispatcher(false);
-const secureDispatcherSkipTlsVerification = makeSecureDispatcher(true);
+const secureDispatcher = makeSecureDispatcher();
+const secureDispatcherSkipTlsVerification = makeSecureDispatcher({
+  skipTlsVerification: true,
+});
+const selfHostedDispatcher = makeSecureDispatcher({ allowPrivateIPs: true });
+const selfHostedDispatcherSkipTlsVerification = makeSecureDispatcher({
+  skipTlsVerification: true,
+  allowPrivateIPs: true,
+});
 
-export const getSecureDispatcher = (skipTlsVerification: boolean = false) =>
-  skipTlsVerification ? secureDispatcherSkipTlsVerification : secureDispatcher;
+interface SecureDispatcherConfig {
+  skipTlsVerification?: boolean;
+  allowPrivateIPs?: boolean;
+}
+
+export const getSecureDispatcher = (config: SecureDispatcherConfig = {}) => {
+  const { skipTlsVerification = false, allowPrivateIPs = false } = config;
+
+  if (allowPrivateIPs) {
+    return skipTlsVerification
+      ? selfHostedDispatcherSkipTlsVerification
+      : selfHostedDispatcher;
+  }
+  return skipTlsVerification
+    ? secureDispatcherSkipTlsVerification
+    : secureDispatcher;
+};

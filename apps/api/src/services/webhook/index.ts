@@ -18,11 +18,16 @@ export async function createWebhookSender(params: {
     return null;
   }
 
-  return new WebhookSender(config.config, config.secret, {
-    teamId: params.teamId,
-    jobId: params.jobId,
-    v0: params.v0,
-  });
+  return new WebhookSender(
+    config.config,
+    config.secret,
+    {
+      teamId: params.teamId,
+      jobId: params.jobId,
+      v0: params.v0,
+    },
+    config.isSelfHosted,
+  );
 }
 
 export {

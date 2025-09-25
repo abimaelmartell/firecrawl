@@ -6,7 +6,11 @@ export async function getWebhookConfig(
   teamId: string,
   jobId: string,
   webhook?: WebhookConfig,
-): Promise<{ config: WebhookConfig; secret?: string } | null> {
+): Promise<{
+  config: WebhookConfig;
+  secret?: string;
+  isSelfHosted?: boolean;
+} | null> {
   // priority:
   // - webhook
   // - self-hosted environment variable
@@ -28,6 +32,7 @@ export async function getWebhookConfig(
         events: ["completed", "failed", "page", "started"],
       },
       secret: process.env.SELF_HOSTED_WEBHOOK_HMAC_SECRET,
+      isSelfHosted: true,
     };
   }
 

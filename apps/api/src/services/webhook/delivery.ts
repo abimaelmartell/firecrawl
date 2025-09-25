@@ -15,6 +15,7 @@ const WEBHOOK_INSERT_BATCH_SIZE = 1000;
 export class WebhookSender {
   private config: WebhookConfig;
   private secret?: string;
+  private isSelfHosted?: boolean;
   private context: { teamId: string; jobId: string; v0: boolean };
   private logger: any;
 
@@ -22,15 +23,18 @@ export class WebhookSender {
     config: WebhookConfig,
     secret: string | undefined,
     context: { teamId: string; jobId: string; v0: boolean },
+    isSelfHosted?: boolean,
   ) {
     this.config = config;
     this.secret = secret;
     this.context = context;
+    this.isSelfHosted = isSelfHosted;
     this.logger = _logger.child({
       module: "webhook-sender",
       teamId: context.teamId,
       jobId: context.jobId,
       isV0: context.v0,
+      isSelfHosted,
     });
   }
 
@@ -69,7 +73,7 @@ export class WebhookSender {
 
   private async deliver(payload: any, scrapeId?: string): Promise<void> {
     const webhookHost = new URL(this.config.url).hostname;
-    if (isIPPrivate(webhookHost)) {
+    if (!this.isSelfHosted && isIPPrivate(webhookHost)) {
       this.logger.warn("Aborting webhook call to private IP address", {
         webhookUrl: this.config.url,
       });
@@ -93,7 +97,7 @@ export class WebhookSender {
         method: "POST",
         headers,
         body: payloadString,
-        dispatcher: getSecureDispatcher(),
+        dispatcher: getSecureDispatcher({ allowPrivateIPs: this.isSelfHosted }),
         signal: AbortSignal.timeout(this.context.v0 ? 30000 : 10000),
       });
 
