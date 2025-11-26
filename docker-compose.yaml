@@ -1,10 +1,17 @@
 name: firecrawl
 
+x-common-logging: &common-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "5"
+
 x-common-service: &common-service
   # NOTE: If you don't want to build the service locally,
   # uncomment the build: statement and comment out the image: statement
   # image: ghcr.io/firecrawl/firecrawl
   build: apps/api
+  logging: *common-logging
 
   ulimits:
     nofile:
@@ -49,6 +56,7 @@ services:
     # uncomment the build: statement and comment out the image: statement
     # image: ghcr.io/firecrawl/playwright-service:latest
     build: apps/playwright-service-ts
+    logging: *common-logging
     environment:
       PORT: 3000
       PROXY_SERVER: ${PROXY_SERVER}
@@ -81,12 +89,14 @@ services:
     image: redis:alpine
     # image: valkey/valkey:alpine
 
+    logging: *common-logging
     networks:
       - backend
     command: redis-server --bind 0.0.0.0
   
   nuq-postgres:
     build: apps/nuq-postgres
+    logging: *common-logging
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres

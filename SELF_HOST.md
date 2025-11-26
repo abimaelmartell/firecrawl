@@ -187,6 +187,18 @@ docker logs [container_name]
 - Ensure all required environment variables are set correctly in the .env file.
 - Verify that all Docker services defined in docker-compose.yml are correctly configured and the necessary images are available.
 
+### Container logs consume all disk space
+
+**Symptom:**
+The host machine quickly runs out of disk space after sending many requests.
+
+**Explanation:**
+By default Docker stores container logs indefinitely. High-volume scraping can create very large log files in the API container if log rotation is not configured.
+
+**Solution:**
+- The provided `docker-compose.yaml` now includes log rotation (10 MB per file, 5 files) via the `common-logging` anchor. Make sure you are using the updated file.
+- If you customize `docker-compose.yaml`, keep the `logging` block or adjust the `max-size`/`max-file` options to match your disk and retention needs.
+
 ### Connection issues with Redis
 
 **Symptom:**
