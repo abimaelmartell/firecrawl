@@ -87,6 +87,10 @@ async function deriveMarkdownFromHTML(
     return document;
   }
 
+  if (document.markdown && document.markdown.trim().length > 0) {
+    return document;
+  }
+
   if (document.metadata.contentType?.includes("application/json")) {
     if (document.rawHtml === undefined) {
       throw new Error(

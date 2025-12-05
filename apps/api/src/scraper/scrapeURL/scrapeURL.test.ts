@@ -542,6 +542,32 @@ describe("Standalone scrapeURL tests", () => {
     30000,
   );
 
+  it("Markdown scrape should parse markdown only once", async () => {
+    const mockParseMarkdown = parseMarkdown as jest.MockedFunction<
+      typeof parseMarkdown
+    >;
+    mockParseMarkdown.mockClear();
+
+    const out = await scrapeURL(
+      "test:single-markdown-parse",
+      "https://www.roastmywebsite.ai/",
+      scrapeOptions.parse({
+        formats: ["markdown"],
+      }),
+      { teamId: "test" },
+      new CostTracking(),
+    );
+
+    expect(out.success).toBe(true);
+    if (out.success) {
+      expect(out.document.warning).toBeUndefined();
+      expect(out.document).toHaveProperty("markdown");
+      expect(out.document).toHaveProperty("metadata");
+      expect(out.document.metadata.error).toBeUndefined();
+      expect(mockParseMarkdown).toHaveBeenCalledTimes(1);
+    }
+  }, 30000);
+
   it("Sitemap scrape should not convert to markdown", async () => {
     const mockParseMarkdown = parseMarkdown as jest.MockedFunction<
       typeof parseMarkdown
@@ -568,6 +594,32 @@ describe("Standalone scrapeURL tests", () => {
       // But should have rawHtml
       expect(out.document).toHaveProperty("rawHtml");
       expect(out.document.rawHtml).toBeTruthy();
+      expect(out.document).toHaveProperty("metadata");
+      expect(out.document.metadata.error).toBeUndefined();
+    }
+  }, 30000);
+
+  it("Branding-only scrape should not derive markdown", async () => {
+    const mockParseMarkdown = parseMarkdown as jest.MockedFunction<
+      typeof parseMarkdown
+    >;
+    mockParseMarkdown.mockClear();
+
+    const out = await scrapeURL(
+      "test:branding-no-markdown",
+      "https://www.roastmywebsite.ai/",
+      scrapeOptions.parse({
+        formats: ["branding"],
+      }),
+      { teamId: "test" },
+      new CostTracking(),
+    );
+
+    expect(out.success).toBe(true);
+    if (out.success) {
+      expect(out.document.warning).toBeUndefined();
+      expect(mockParseMarkdown).not.toHaveBeenCalled();
+      expect(out.document).not.toHaveProperty("markdown");
       expect(out.document).toHaveProperty("metadata");
       expect(out.document.metadata.error).toBeUndefined();
     }

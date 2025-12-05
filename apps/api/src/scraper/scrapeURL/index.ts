@@ -346,12 +346,32 @@ async function scrapeURLLoopIter(
       engine,
     );
 
+    const requiresMarkdown =
+      hasFormatOfType(meta.options.formats, "markdown") ||
+      hasFormatOfType(meta.options.formats, "changeTracking") ||
+      hasFormatOfType(meta.options.formats, "json") ||
+      hasFormatOfType(meta.options.formats, "summary");
+
     let checkMarkdown: string;
     if (
       meta.internalOptions.teamId === "sitemap" ||
       meta.internalOptions.teamId === "robots-txt"
     ) {
       checkMarkdown = engineResult.html?.trim() ?? "";
+    } else if (!requiresMarkdown) {
+      checkMarkdown = await htmlTransform(
+        engineResult.html,
+        meta.url,
+        scrapeOptions.parse({ onlyMainContent: true }),
+      );
+
+      if (checkMarkdown.trim().length === 0) {
+        checkMarkdown = await htmlTransform(
+          engineResult.html,
+          meta.url,
+          scrapeOptions.parse({ onlyMainContent: false }),
+        );
+      }
     } else {
       checkMarkdown = await parseMarkdown(
         await htmlTransform(
@@ -370,6 +390,8 @@ async function scrapeURLLoopIter(
           ),
         );
       }
+
+      engineResult.markdown ??= checkMarkdown;
     }
 
     // Success factors
